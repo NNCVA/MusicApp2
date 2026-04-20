@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">音乐播放器</string>
+    <string name="navigation_drawer_open">打开导航抽屉</string>
+    <string name="navigation_drawer_close">关闭导航抽屉</string>
+    <string name="action_settings">设置</string>
+    
+    <!-- 通用 -->
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="delete">删除</string>
+    <string name="rename">重命名</string>
+    <string name="play">播放</string>
+    <string name="pause">暂停</string>
+    <string name="next">下一首</string>
+    <string name="previous">上一首</string>
+    <string name="shuffle">随机播放</string>
+    <string name="repeat">循环播放</string>
+    <string name="repeat_one">单曲循环</string>
+    <string name="order">顺序播放</string>
+    
+    <!-- 主界面 -->
+    <string name="title_songs">歌曲</string>
+    <string name="title_playlists">歌单</string>
+    <string name="title_recent_play">最近播放</string>
+    <string name="title_scan_music">扫描音乐</string>
+    <string name="search_hint">搜索歌曲或歌手</string>
+    <string name="sort_by_name">按名称排序</string>
+    <string name="sort_by_artist">按歌手排序</string>
+    <string name="sort_by_date">按时间排序</string>
+    
+    <!-- 歌单 -->
+    <string name="create_playlist">新建歌单</string>
+    <string name="playlist_name_hint">歌单名称</string>
+    <string name="add_to_playlist">添加到歌单</string>
+    <string name="playlist_songs_count">%d 首歌曲</string>
+    <string name="delete_playlist_confirm">确定要删除歌单"%s"吗？</string>
+    <string name="rename_playlist">重命名歌单</string>
+    
+    <!-- 播放详情 -->
+    <string name="lyrics_not_found">未找到歌词</string>
+    <string name="show_lyrics">显示歌词</string>
+    <string name="external_lyrics">外部文件</string>
+    <string name="embedded_synced_lyrics">内嵌同步</string>
+    <string name="embedded_text_lyrics">内嵌文本</string>
+    <string name="unknown_artist">未知歌手</string>
+    <string name="unknown_album">未知专辑</string>
+    
+    <!-- 扫描音乐 -->
+    <string name="scan_music">扫描音乐</string>
+    <string name="select_folder">选择文件夹</string>
+    <string name="scanning">正在扫描...</string>
+    <string name="scan_complete">扫描完成，共找到 %d 首歌曲</string>
+    <string name="no_music_found">未找到音乐文件</string>
+    <string name="selected_folders">已选文件夹</string>
+    <string name="scanning_selected_folders">正在扫描选定文件夹...</string>
+    <string name="scanning_all_music">正在扫描所有音乐...</string>
+    
+    <!-- 权限 -->
+    <string name="permission_required">需要权限</string>
+    <string name="storage_permission_required">需要存储权限来访问音乐文件</string>
+    <string name="notification_permission_required">需要通知权限来显示播放控制</string>
+    
+    <!-- 通知 -->
+    <string name="notification_channel_name">音乐播放</string>
+    <string name="notification_channel_description">音乐播放控制通知</string>
+    
+    <!-- 播放控制 -->
+    <string name="play_all">播放全部</string>
+    <string name="add_to_queue">添加到队列</string>
+    <string name="remove_from_queue">从队列移除</string>
+    <string name="view_album">查看专辑</string>
+    <string name="view_artist">查看歌手</string>
+    
+    <!-- 歌曲信息 -->
+    <string name="song_info">歌曲信息</string>
+    <string name="label_title">标题</string>
+    <string name="label_artist">艺术家</string>
+    <string name="label_album">专辑</string>
+    <string name="label_path">路径</string>
+    <string name="label_size">大小</string>
+    <string name="label_format">格式</string>
+    <string name="label_duration">时长</string>
+    <string name="label_date_added">添加时间</string>
+    <string name="label_date_modified">修改时间</string>
+    <string name="copy_path">复制路径</string>
+    <string name="path_copied">路径已复制到剪贴板</string>
+    <string name="unknown_value">未知</string>
+
+    <!-- 多选功能 -->
+    <string name="multi_select">多选</string>
+    <string name="select_all">全选</string>
+    <string name="shuffle_play">随机播放</string>
+    <string name="song_count">%d 首歌曲</string>
+    <string name="selected_count">%d 已选择</string>
+    <string name="collapse_player">折叠播放器</string>
+</resources>

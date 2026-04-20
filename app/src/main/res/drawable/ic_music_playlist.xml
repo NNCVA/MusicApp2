@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 三条列表线 -->
+    <path
+        android:strokeColor="#333333"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M4,6H20 M4,11H13 M4,16H13" />
+    <!-- 音乐符号 -->
+    <path
+        android:fillColor="#333333"
+        android:pathData="M17,13v5.55c-0.3,-0.18 -0.63,-0.3 -1,-0.3c-1.1,0 -2,0.9 -2,2s0.9,2 2,2s2,-0.9 2,-2v-5.25h3v-2h-4z" />
+</vector>

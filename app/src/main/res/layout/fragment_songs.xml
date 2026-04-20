@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <!-- 正常模式操作栏 -->
+    <include
+        android:id="@+id/action_bar_main"
+        layout="@layout/action_bar_main"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 多选模式操作栏 (默认隐藏) -->
+    <include
+        android:id="@+id/action_bar_multi_select"
+        layout="@layout/action_bar_multi_select"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Barrier 确保内容始终在可见操作栏下方 -->
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/action_bar_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="action_bar_main,action_bar_multi_select" />
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_layout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@+id/action_bar_barrier"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <include
+            android:id="@+id/content_main"
+            layout="@layout/content_main" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

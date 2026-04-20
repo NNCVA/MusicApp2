@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/player_bottom_sheet"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/play_page_background"
+    android:elevation="8dp">
+
+    <!-- 迷你播放栏 (折叠时显示，展开时透明度渐变到0) -->
+    <include
+        android:id="@+id/mini_player_container"
+        layout="@layout/mini_player"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 全屏播放内容 (折叠时透明度0，展开时渐变到1) -->
+    <include
+        android:id="@+id/full_player_content"
+        layout="@layout/content_player_detail"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 顶部下滑箭头 (仅在展开时可见) -->
+    <ImageView
+        android:id="@+id/btn_collapse_player"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:alpha="0"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/collapse_player"
+        android:padding="12dp"
+        android:src="@drawable/ic_keyboard_arrow_down"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
