@@ -1,8 +1,6 @@
 package com.musicplayer.ui.main
 
 import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,11 +9,8 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -31,11 +26,15 @@ import com.musicplayer.data.model.SortType
 import com.musicplayer.databinding.FragmentSongsBinding
 import com.musicplayer.service.PlayerManager
 import com.musicplayer.ui.adapter.SongAdapter
+import com.musicplayer.ui.common.showCreatePlaylistNameDialog
+import com.musicplayer.ui.common.showDeleteSongsConfirmDialog
+import com.musicplayer.ui.common.showPlayerSnackbar
+import com.musicplayer.ui.common.showPlaylistSelectionDialog
 import com.musicplayer.util.system.PermissionManager
 import kotlinx.coroutines.launch
 
 /**
- * 歌曲列表Fragment
+ * 歌曲列表 Fragment
  */
 class SongsFragment : Fragment() {
 
@@ -46,10 +45,8 @@ class SongsFragment : Fragment() {
     private lateinit var songAdapter: SongAdapter
     private val playerManager = PlayerManager.getInstance()
 
-    // 多选模式标志
     private var isMultiSelectMode = false
 
-    // 权限请求
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -77,14 +74,10 @@ class SongsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 初始化ViewModel
         val musicRepository = (requireActivity().application as MusicPlayerApplication).musicRepository
         viewModel = ViewModelProvider(this, MainViewModelFactory(musicRepository))[MainViewModel::class.java]
 
-        // 设置UI
         setupUI()
-
-        // 观察数据
         observeData()
     }
 
@@ -98,39 +91,8 @@ class SongsFragment : Fragment() {
         }
     }
 
-    /**
-     * 获取适合显示 Snackbar 的锚点视图
-     * 优先使用 Activity 的 CoordinatorLayout，确保 Snackbar 正确显示
-     */
-    private fun getSnackbarAnchorView(): View {
-        val coordinatorLayout = requireActivity().findViewById<View>(R.id.coordinator_layout)
-        return coordinatorLayout ?: requireView()
-    }
-
-    /**
-     * 显示 Snackbar，自动处理迷你播放栏的遮挡问题
-     * 将 Snackbar 定位到迷你播放栏上方
-     */
     private fun showSnackbar(message: String, duration: Int = Snackbar.LENGTH_SHORT) {
-        val snackbar = Snackbar.make(getSnackbarAnchorView(), message, duration)
-
-        // 获取迷你播放栏视图
-        val miniPlayer = requireActivity().findViewById<View>(R.id.mini_player_container)
-        if (miniPlayer != null && miniPlayer.visibility == View.VISIBLE) {
-            val snackbarView = snackbar.view
-            val params = snackbarView.layoutParams as androidx.coordinatorlayout.widget.CoordinatorLayout.LayoutParams
-
-            // 设置底部边距为迷你播放栏的高度，使 Snackbar 显示在迷你播放栏上方
-            miniPlayer.post {
-                val miniPlayerHeight = miniPlayer.height
-                if (miniPlayerHeight > 0) {
-                    params.bottomMargin = miniPlayerHeight
-                    snackbarView.layoutParams = params
-                }
-            }
-        }
-
-        snackbar.show()
+        showPlayerSnackbar(message, duration)
     }
 
     private fun showPermissionDeniedMessage() {
@@ -138,20 +100,12 @@ class SongsFragment : Fragment() {
     }
 
     private fun setupUI() {
-        // 检查权限
         checkPermissions()
 
-        // 设置RecyclerView
         songAdapter = SongAdapter(
-            onSongClick = { song, position ->
-                playSong(song, position)
-            },
-            onSongMenuClick = { song, view ->
-                showSongMenu(song, view)
-            },
-            onSongLongClick = { song, position ->
-                enterMultiSelectMode(song, position)
-            }
+            onSongClick = { song, position -> playSong(song, position) },
+            onSongMenuClick = { song, view -> showSongMenu(song, view) },
+            onSongLongClick = { song, position -> enterMultiSelectMode(song, position) }
         )
 
         songAdapter.onSelectionChanged = {
@@ -163,7 +117,6 @@ class SongsFragment : Fragment() {
             adapter = songAdapter
         }
 
-        // 设置正常模式操作栏按钮
         binding.actionBarMain.btnShuffle.setOnClickListener {
             shufflePlay()
         }
@@ -172,7 +125,6 @@ class SongsFragment : Fragment() {
             toggleSort()
         }
 
-        // 设置多选模式操作栏按钮
         binding.actionBarMultiSelect.btnSelectAll.setOnClickListener {
             if (songAdapter.isAllSelected()) {
                 songAdapter.deselectAll()
@@ -200,14 +152,12 @@ class SongsFragment : Fragment() {
             exitMultiSelectMode()
         }
 
-        // 设置下拉刷新
         binding.swipeRefreshLayout.setOnRefreshListener {
             viewModel.refreshSongs()
         }
     }
 
     private fun observeData() {
-        // 观察歌曲列表
         viewModel.filteredSongs.observe(viewLifecycleOwner) { songs ->
             songAdapter.submitList(songs)
             updateEmptyView(songs.isEmpty())
@@ -215,12 +165,10 @@ class SongsFragment : Fragment() {
             binding.swipeRefreshLayout.isRefreshing = false
         }
 
-        // 观察加载状态
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             binding.contentMain.progressBar.isVisible = isLoading
         }
 
-        // 观察错误消息
         viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
             error?.let {
                 showSnackbar(it, Snackbar.LENGTH_LONG)
@@ -228,7 +176,6 @@ class SongsFragment : Fragment() {
             }
         }
 
-        // 观察播放器状态
         playerManager.currentSong.observe(viewLifecycleOwner) { song ->
             songAdapter.updateCurrentPlayingSongId(song?.id)
         }
@@ -240,8 +187,7 @@ class SongsFragment : Fragment() {
     }
 
     private fun updateSongCount(count: Int) {
-        binding.actionBarMain.tvSongCount.text =
-            getString(R.string.song_count, count)
+        binding.actionBarMain.tvSongCount.text = getString(R.string.song_count, count)
     }
 
     private fun enterMultiSelectMode(selectedSong: Song, position: Int) {
@@ -319,7 +265,6 @@ class SongsFragment : Fragment() {
 
         val currentSong = playerManager.currentSong.value
         if (currentSong != null && currentSong.id == song.id) {
-            // 如果是当前播放的歌曲，请求展开Bottom Sheet
             playerManager.requestExpandPlayerSheet()
         } else {
             playerManager.playSong(song, songs, position)
@@ -373,23 +318,28 @@ class SongsFragment : Fragment() {
                     playSong(song, 0)
                     true
                 }
+
                 R.id.menu_add_to_playlist -> {
                     showAddToPlaylistDialog(song)
                     true
                 }
+
                 R.id.menu_multi_select -> {
                     val position = songAdapter.getPositionForSong(song)
                     enterMultiSelectMode(song, position)
                     true
                 }
+
                 R.id.menu_song_info -> {
                     showSongInfoBottomSheet(song)
                     true
                 }
+
                 R.id.menu_delete -> {
                     viewModel.deleteSong(song)
                     true
                 }
+
                 else -> false
             }
         }
@@ -400,148 +350,67 @@ class SongsFragment : Fragment() {
     private fun showAddToPlaylistDialog(song: Song) {
         viewModel.viewModelScope.launch {
             val playlists = viewModel.getAllPlaylistsSync()
-
-            if (playlists.isEmpty()) {
-                AlertDialog.Builder(requireContext())
-                    .setTitle("提示")
-                    .setMessage("您还没有创建任何歌单，请先创建歌单")
-                    .setPositiveButton("确定") { dialog, _ ->
-                        showCreatePlaylistDialog(song)
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton("取消", null)
-                    .show()
-            } else {
-                val playlistNames = playlists.map { it.name }.toTypedArray()
-                val selectedIndices = BooleanArray(playlists.size) { false }
-
-                AlertDialog.Builder(requireContext())
-                    .setTitle("添加到歌单")
-                    .setMultiChoiceItems(playlistNames, selectedIndices) { _, which, isChecked ->
-                        selectedIndices[which] = isChecked
-                    }
-                    .setPositiveButton("确定") { dialog, _ ->
-                        val selectedPlaylistIds = mutableListOf<Long>()
-                        for (i in selectedIndices.indices) {
-                            if (selectedIndices[i]) {
-                                selectedPlaylistIds.add(playlists[i].id)
-                            }
+            showPlaylistSelectionDialog(
+                context = requireContext(),
+                playlists = playlists,
+                onCreateNewRequested = { showCreatePlaylistDialog(song) },
+                onConfirmed = { selectedPlaylistIds ->
+                    if (selectedPlaylistIds.isNotEmpty()) {
+                        selectedPlaylistIds.forEach { playlistId ->
+                            viewModel.addSongToPlaylist(playlistId, song)
                         }
-                        if (selectedPlaylistIds.isNotEmpty()) {
-                            for (playlistId in selectedPlaylistIds) {
-                                viewModel.addSongToPlaylist(playlistId, song)
-                            }
-                            showSnackbar("已添加到歌单")
-                        }
-                        dialog.dismiss()
+                        showSnackbar("已添加到歌单")
                     }
-                    .setNegativeButton("取消", null)
-                    .show()
-            }
+                }
+            )
         }
     }
 
     private fun showCreatePlaylistDialog(songToAdd: Song? = null) {
-        val editText = EditText(requireContext()).apply {
-            hint = "请输入歌单名称"
-            setPadding(32, 16, 32, 16)
+        showCreatePlaylistNameDialog(requireContext()) { name ->
+            viewModel.createPlaylistAndAddSong(name, songToAdd)
+            showSnackbar("歌单创建成功")
         }
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("新建歌单")
-            .setView(editText)
-            .setPositiveButton("确定") { dialog, _ ->
-                val name = editText.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    viewModel.createPlaylistAndAddSong(name, songToAdd)
-                    showSnackbar("歌单创建成功")
-                }
-                dialog.dismiss()
-            }
-            .setNegativeButton("取消", null)
-            .show()
     }
 
     private fun showAddToPlaylistDialogForMultipleSongs(songs: List<Song>) {
         viewModel.viewModelScope.launch {
             val playlists = viewModel.getAllPlaylistsSync()
-
-            if (playlists.isEmpty()) {
-                AlertDialog.Builder(requireContext())
-                    .setTitle("提示")
-                    .setMessage("您还没有创建任何歌单，请先创建歌单")
-                    .setPositiveButton("确定") { dialog, _ ->
-                        showCreatePlaylistDialogForMultipleSongs(songs)
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton("取消", null)
-                    .show()
-            } else {
-                val playlistNames = playlists.map { it.name }.toTypedArray()
-                val selectedIndices = BooleanArray(playlists.size) { false }
-
-                AlertDialog.Builder(requireContext())
-                    .setTitle("添加到歌单")
-                    .setMultiChoiceItems(playlistNames, selectedIndices) { _, which, isChecked ->
-                        selectedIndices[which] = isChecked
-                    }
-                    .setPositiveButton("确定") { dialog, _ ->
-                        val selectedPlaylistIds = mutableListOf<Long>()
-                        for (i in selectedIndices.indices) {
-                            if (selectedIndices[i]) {
-                                selectedPlaylistIds.add(playlists[i].id)
+            showPlaylistSelectionDialog(
+                context = requireContext(),
+                playlists = playlists,
+                onCreateNewRequested = { showCreatePlaylistDialogForMultipleSongs(songs) },
+                onConfirmed = { selectedPlaylistIds ->
+                    if (selectedPlaylistIds.isNotEmpty()) {
+                        songs.forEach { song ->
+                            selectedPlaylistIds.forEach { playlistId ->
+                                viewModel.addSongToPlaylist(playlistId, song)
                             }
                         }
-                        if (selectedPlaylistIds.isNotEmpty()) {
-                            for (song in songs) {
-                                for (playlistId in selectedPlaylistIds) {
-                                    viewModel.addSongToPlaylist(playlistId, song)
-                                }
-                            }
-                            showSnackbar("已添加到歌单")
-                        }
-                        dialog.dismiss()
+                        showSnackbar("已添加到歌单")
                     }
-                    .setNegativeButton("取消", null)
-                    .show()
-            }
+                }
+            )
         }
     }
 
     private fun showCreatePlaylistDialogForMultipleSongs(songs: List<Song>) {
-        val editText = EditText(requireContext()).apply {
-            hint = "请输入歌单名称"
-            setPadding(32, 16, 32, 16)
+        showCreatePlaylistNameDialog(requireContext()) { name ->
+            viewModel.createPlaylistAndAddMultipleSongs(name, songs)
+            showSnackbar("歌单创建成功")
         }
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("新建歌单")
-            .setView(editText)
-            .setPositiveButton("确定") { dialog, _ ->
-                val name = editText.text.toString().trim()
-                if (name.isNotEmpty()) {
-                    viewModel.createPlaylistAndAddMultipleSongs(name, songs)
-                    showSnackbar("歌单创建成功")
-                }
-                dialog.dismiss()
-            }
-            .setNegativeButton("取消", null)
-            .show()
     }
 
     private fun showDeleteMultipleSongsDialog(songs: List<Song>) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("删除歌曲")
-            .setMessage("确定要删除选中的${songs.size}首歌曲吗？")
-            .setPositiveButton("删除") { dialog, _ ->
-                for (song in songs) {
-                    viewModel.deleteSong(song)
-                }
-                showSnackbar("已删除${songs.size}首歌曲")
-                dialog.dismiss()
+        showDeleteSongsConfirmDialog(
+            context = requireContext(),
+            songCount = songs.size
+        ) {
+            songs.forEach { song ->
+                viewModel.deleteSong(song)
             }
-            .setNegativeButton("取消", null)
-            .show()
+            showSnackbar("已删除${songs.size}首歌曲")
+        }
     }
 
     private fun showSongInfoBottomSheet(song: Song) {
