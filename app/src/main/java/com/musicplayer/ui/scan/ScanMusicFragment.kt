@@ -350,6 +350,7 @@ class ScanMusicFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        binding.contentScanMusic.rvSelectedFolders.adapter = null
         super.onDestroyView()
         _binding = null
     }

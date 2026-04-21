@@ -420,6 +420,8 @@ class SongsFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.contentMain.recyclerView.adapter = null
+        songAdapter.release()
         _binding = null
     }
 }

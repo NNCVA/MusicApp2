@@ -218,7 +218,16 @@ class SongAdapter(
     
     // 添加一个回调函数，用于通知选中状态改变
     var onSelectionChanged: (() -> Unit)? = null
-    
+
+    /**
+     * 释放资源，防止内存泄漏
+     */
+    fun release() {
+        selectedSongs.clear()
+        currentPlayingSongId = null
+        onSelectionChanged = null
+    }
+
     /**
      * DiffUtil回调
      */

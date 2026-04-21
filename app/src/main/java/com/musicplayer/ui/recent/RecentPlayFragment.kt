@@ -320,6 +320,8 @@ class RecentPlayFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        binding.contentRecentPlay.recyclerView.adapter = null
+        adapter.release()
         super.onDestroyView()
         _binding = null
     }

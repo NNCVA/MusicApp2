@@ -25,6 +25,14 @@ class PlaylistsFragment : Fragment() {
 
     private lateinit var viewModel: PlaylistViewModel
     private lateinit var adapter: PlaylistAdapter
+    private val stopRefreshingRunnable = Runnable {
+        _binding?.swipeRefreshLayout?.isRefreshing = false
+    }
+    private val restorePlaylistListRunnable = Runnable {
+        if (::adapter.isInitialized) {
+            adapter.submitList(ArrayList(viewModel.playlists.value ?: emptyList()))
+        }
+    }
 
     private val playlistChangeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -84,9 +92,7 @@ class PlaylistsFragment : Fragment() {
         binding.swipeRefreshLayout.setOnRefreshListener {
             binding.swipeRefreshLayout.isRefreshing = true
             viewModel.refreshPlaylists()
-            view?.postDelayed({
-                binding.swipeRefreshLayout.isRefreshing = false
-            }, 1000)
+            binding.root.postDelayed(stopRefreshingRunnable, 1000)
         }
     }
 
@@ -141,13 +147,14 @@ class PlaylistsFragment : Fragment() {
         super.onResume()
         viewModel.playlists.value?.let {
             adapter.submitList(null)
-            binding.contentPlaylist.recyclerView.postDelayed({
-                adapter.submitList(ArrayList(it))
-            }, 100)
+            binding.contentPlaylist.recyclerView.postDelayed(restorePlaylistListRunnable, 100)
         }
     }
 
     override fun onDestroyView() {
+        binding.root.removeCallbacks(stopRefreshingRunnable)
+        binding.contentPlaylist.recyclerView.removeCallbacks(restorePlaylistListRunnable)
+        binding.contentPlaylist.recyclerView.adapter = null
         super.onDestroyView()
         _binding = null
     }

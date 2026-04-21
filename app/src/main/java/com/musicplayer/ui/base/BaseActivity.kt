@@ -152,12 +152,9 @@ abstract class BaseActivity : AppCompatActivity() {
      * 观察播放器状态
      */
     private fun observePlayerState() {
-        // 观察当前播放歌曲
         playerManager.currentSong.observe(this) {
             updateMiniPlayer(it)
         }
-        
-        // 观察播放状态
         playerManager.isPlaying.observe(this) {
             updatePlayPauseButton(it)
         }

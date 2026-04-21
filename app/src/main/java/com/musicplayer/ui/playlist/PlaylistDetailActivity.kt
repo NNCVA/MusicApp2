@@ -33,6 +33,9 @@ class PlaylistDetailActivity : BaseActivity() {
     private lateinit var viewModel: PlaylistDetailViewModel
     private lateinit var adapter: SongAdapter
     private lateinit var playerController: PlaylistDetailPlayerController
+    private val stopRefreshingRunnable = Runnable {
+        binding.swipeRefreshLayout.isRefreshing = false
+    }
 
     private var isMultiSelectMode = false
     private var playlistId: Long = -1
@@ -179,9 +182,7 @@ class PlaylistDetailActivity : BaseActivity() {
         binding.swipeRefreshLayout.setOnRefreshListener {
             binding.swipeRefreshLayout.isRefreshing = true
             viewModel.refreshSongs()
-            binding.root.postDelayed({
-                binding.swipeRefreshLayout.isRefreshing = false
-            }, 500)
+            binding.root.postDelayed(stopRefreshingRunnable, 500)
         }
     }
 
@@ -373,9 +374,14 @@ class PlaylistDetailActivity : BaseActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        binding.root.removeCallbacks(stopRefreshingRunnable)
+        if (::adapter.isInitialized) {
+            binding.contentMain.recyclerView.adapter = null
+            adapter.release()
+        }
         if (::playerController.isInitialized) {
             playerController.release()
         }
+        super.onDestroy()
     }
 }
