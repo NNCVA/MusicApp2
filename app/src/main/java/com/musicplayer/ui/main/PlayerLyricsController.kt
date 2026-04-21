@@ -179,4 +179,9 @@ internal class PlayerLyricsController(
 
         binding.lyricsView.smoothScrollTo(0, scrollY)
     }
+
+    fun release() {
+        lyrics = emptyList()
+        currentLyricsIndex = -1
+    }
 }

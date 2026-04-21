@@ -51,4 +51,8 @@ internal class PlayerViewSwipeController(
     fun syncPageTranslations() {
         binding.pageSwipeContainer.syncPageTranslations()
     }
+
+    fun release() {
+        binding.pageSwipeContainer.release()
+    }
 }

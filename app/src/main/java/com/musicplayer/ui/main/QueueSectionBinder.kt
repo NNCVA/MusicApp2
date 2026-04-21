@@ -2,7 +2,9 @@ package com.musicplayer.ui.main
 
 import android.widget.TextView
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.musicplayer.data.model.Song
 import com.musicplayer.databinding.ContentPlayerDetailBinding
 import com.musicplayer.service.PlayerManager
 import com.musicplayer.ui.adapter.QueueAdapter
@@ -19,22 +21,31 @@ internal class QueueSectionBinder(
         playerManager.playSong(song, playerManager.playlist.value ?: emptyList(), position)
     }
 
+    private val playlistObserver = Observer<List<Song>> { playlist ->
+        queueAdapter.submitList(playlist)
+        updateQueuePosition()
+    }
+
+    private val currentSongObserver = Observer<Song?> { song ->
+        queueAdapter.currentPlayingSongId = song?.id
+        updateQueuePosition()
+        scrollToCurrentSong()
+    }
+
     init {
         binding.queueRecyclerView.apply {
             adapter = queueAdapter
             layoutManager = LinearLayoutManager(context)
         }
 
-        playerManager.playlist.observe(lifecycleOwner) { playlist ->
-            queueAdapter.submitList(playlist)
-            updateQueuePosition()
-        }
+        playerManager.playlist.observe(lifecycleOwner, playlistObserver)
+        playerManager.currentSong.observe(lifecycleOwner, currentSongObserver)
+    }
 
-        playerManager.currentSong.observe(lifecycleOwner) { song ->
-            queueAdapter.currentPlayingSongId = song?.id
-            updateQueuePosition()
-            scrollToCurrentSong()
-        }
+    fun release() {
+        playerManager.playlist.removeObserver(playlistObserver)
+        playerManager.currentSong.removeObserver(currentSongObserver)
+        binding.queueRecyclerView.adapter = null
     }
 
     fun scrollToCurrentSong() {

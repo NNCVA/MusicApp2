@@ -153,9 +153,14 @@ internal class PlaylistDetailPlayerController(
     }
 
     fun release() {
-        if (::rotateAnimator.isInitialized && rotateAnimator.isRunning) {
-            rotateAnimator.cancel()
+        if (::rotateAnimator.isInitialized) {
+            if (rotateAnimator.isRunning) {
+                rotateAnimator.cancel()
+            }
         }
+        lyricsController.release()
+        queueSectionBinder.release()
+        playerViewSwipeController.release()
     }
 
     private fun setupBottomSheet() {

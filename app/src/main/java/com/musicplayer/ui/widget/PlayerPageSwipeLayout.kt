@@ -291,6 +291,13 @@ class PlayerPageSwipeLayout @JvmOverloads constructor(
         settleAnimator = null
     }
 
+    fun release() {
+        cancelSettleAnimation()
+        velocityTracker?.recycle()
+        velocityTracker = null
+        onPageChanged = null
+    }
+
     private fun animationDuration(startOffset: Float, targetOffset: Float, pageWidth: Float): Long {
         if (pageWidth <= 0f) {
             return DEFAULT_SETTLE_DURATION_MS
