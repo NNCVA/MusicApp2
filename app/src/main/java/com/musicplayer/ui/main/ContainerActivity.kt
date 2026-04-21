@@ -666,6 +666,7 @@ class ContainerActivity : AppCompatActivity() {
     private fun updateFullPlayerSongInfo(song: Song) {
         fullPlayerBinding.toolbarSongTitle.text = song.title
         fullPlayerBinding.toolbarSongTitle.isSelected = true
+        fullPlayerBinding.toolbarSongTitle.requestFocus()
         fullPlayerBinding.toolbarArtistName.text = song.artist
 
         // 只有歌曲ID真正改变时才重新加载封面
