@@ -16,6 +16,8 @@ import com.musicplayer.data.model.Song
 import com.musicplayer.databinding.LayoutPlayerBottomSheetBinding
 import com.musicplayer.service.PlayerManager
 import com.musicplayer.ui.main.PlayerLyricsController
+import com.musicplayer.ui.main.PlayerViewSwipeController
+import com.musicplayer.ui.main.QueueSectionBinder
 import com.musicplayer.util.media.AlbumArtModelLoader
 import com.musicplayer.util.ui.BottomCropDrawable
 
@@ -28,6 +30,8 @@ internal class PlaylistDetailPlayerController(
     private val fullPlayerBinding = binding.fullPlayerContent
     private val bottomSheetBehavior = BottomSheetBehavior.from(binding.root)
     private val lyricsController = PlayerLyricsController(activity, fullPlayerBinding, playerManager)
+    private lateinit var queueSectionBinder: QueueSectionBinder
+    private lateinit var playerViewSwipeController: PlayerViewSwipeController
 
     private lateinit var rotateAnimator: ObjectAnimator
     private var lastIsPlayingState: Boolean? = null
@@ -39,6 +43,7 @@ internal class PlaylistDetailPlayerController(
 
     fun setup() {
         setupBottomSheet()
+        setupPlayerSections()
         setupPlayerControls()
         setupAlbumRotation()
     }
@@ -240,6 +245,7 @@ internal class PlaylistDetailPlayerController(
                 }, 50)
             }
         })
+        playerViewSwipeController.bind()
     }
 
     private fun setupAlbumRotation() {
@@ -263,12 +269,13 @@ internal class PlaylistDetailPlayerController(
     }
 
     private fun toggleLyricsView() {
-        if (fullPlayerBinding.lyricsView.visibility == View.VISIBLE) {
-            fullPlayerBinding.lyricsView.visibility = View.GONE
-            fullPlayerBinding.albumCoverView.visibility = View.VISIBLE
-        } else {
-            fullPlayerBinding.lyricsView.visibility = View.VISIBLE
-            fullPlayerBinding.albumCoverView.visibility = View.GONE
+        playerViewSwipeController.showNextView()
+    }
+
+    private fun setupPlayerSections() {
+        queueSectionBinder = QueueSectionBinder(fullPlayerBinding, playerManager, activity)
+        playerViewSwipeController = PlayerViewSwipeController(fullPlayerBinding) {
+            queueSectionBinder.scrollToCurrentSong()
         }
     }
 

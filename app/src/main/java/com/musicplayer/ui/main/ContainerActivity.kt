@@ -169,7 +169,7 @@ class ContainerActivity : AppCompatActivity() {
     private fun setupPlayerSections() {
         lyricsController = PlayerLyricsController(this, fullPlayerBinding, playerManager)
         queueSectionBinder = QueueSectionBinder(fullPlayerBinding, playerManager, this)
-        playerViewSwipeController = PlayerViewSwipeController(fullPlayerBinding, resources) {
+        playerViewSwipeController = PlayerViewSwipeController(fullPlayerBinding) {
             queueSectionBinder.scrollToCurrentSong()
         }
     }

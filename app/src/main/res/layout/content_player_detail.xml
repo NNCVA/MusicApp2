@@ -53,7 +53,8 @@
     </LinearLayout>
 
     <!-- 中间内容区域 (专辑封面和歌词) -->
-    <FrameLayout
+    <com.musicplayer.ui.widget.PlayerPageSwipeLayout
+        android:id="@+id/page_swipe_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -188,7 +189,7 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false" />
         </LinearLayout>
-    </FrameLayout>
+    </com.musicplayer.ui.widget.PlayerPageSwipeLayout>
 
     <!-- 进度条 -->
     <LinearLayout
