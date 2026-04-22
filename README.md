@@ -1,197 +1,226 @@
-# 本地音乐播放器 Android App
+# MusicApp2
 
+一个完全离线运行的 Android 本地音乐播放器，使用 Kotlin 开发，采用 `MVVM + Repository + Service` 架构。项目覆盖本地音频扫描、歌单管理、最近播放、歌词同步、专辑封面加载、通知栏控制，以及迷你播放器与全屏播放器联动。
 
+## 项目概述
 
-一个功能完整的本地音乐播放器Android应用，使用Kotlin语言开发，采用MVVM架构模式。
+MusicApp2 面向 Android 8.0 到 Android 14，核心目标是把“本地媒体管理 + 后台稳定播放 + 复杂播放器交互”做成一条完整链路。
 
+当前项目基线包括：
 
+- 主入口为 `ContainerActivity`，主界面由歌曲、歌单、最近播放、扫描音乐等 Fragment 组成
+- `PlaylistDetailActivity` 保留为独立页面，并复用主播放器侧的共享能力
+- 播放器实例运行在前台播放服务中，页面通过 `PlayerManager` 统一控制和观察状态
+- 全屏播放器采用 `封面 / 歌词 / 播放队列` 三页模型
+- 迷你播放器与全屏播放器的上下切换由 `BottomSheetBehavior` 负责
+- 全屏播放器内部左右切页由 `PlayerPageSwipeLayout` 负责
 
 ## 功能特性
 
-- ✅ 完全本地音乐播放（无网络依赖）
-- ✅ 歌曲扫描、搜索、排序
-- ✅ 歌单创建、管理、批量添加
-- ✅ 最近播放记录（最多20首）
-- ✅ 随机播放、顺序播放、单曲循环
-- ✅ 底部播放栏 + 播放详情页
-- ✅ 歌词解析与同步滚动（LRC）
-- ✅ 前台播放Service + 通知栏控制
+- 完全本地播放，无网络依赖
+- 扫描和管理设备中的音频文件
+- 支持歌单创建、重命名、删除、批量加歌
+- 支持最近播放记录
+- 支持顺序播放、随机播放、单曲循环
+- 支持外部 `.lrc` 歌词与音频内嵌歌词
+- 支持专辑封面加载与本地元数据兜底提取
+- 支持底部迷你播放器、全屏播放器、播放队列联动
+- 支持通知栏控制、媒体按键响应和后台持续播放
 
+当前扫描链路兼容的主流音频格式：
 
+- `mp3`
+- `m4a`
+- `ogg`
+- `wav`
+- `flac`
+- `aac`
+- `wma`
 
-## 技术架构
+## 技术栈
 
-### 开发环境
-- Android Gradle Plugin：8.x
-- Gradle：8.2
-- JDK：17
-- Kotlin：1.9.21
-- 最低支持：Android 8.0（API 26）
-- 目标版本：Android 14（API 34）
+| 类别 | 技术 |
+| --- | --- |
+| 开发语言 | Kotlin 1.9.21 |
+| 构建工具 | AGP 8.2.0 / Gradle 8.2 / JDK 17 |
+| 最低系统 | Android 8.0 `API 26` |
+| 目标系统 | Android 14 `API 34` |
+| 架构 | MVVM + Repository |
+| 播放 | Media3 ExoPlayer 1.4.0 |
+| 数据存储 | Room 2.6.1 |
+| 图片加载 | Glide 4.16.0 |
+| 元数据解析 | Jaudiotagger 2.2.5 |
+| 生命周期与异步 | LiveData / ViewModel / Coroutines |
+| 调试质量 | LeakCanary 2.12（debug） |
 
-### 架构模式
-- **MVVM + Repository**：清晰的数据流和职责分离
-- **Room Database**：本地数据持久化
-- **ExoPlayer**：强大的媒体播放引擎
-- **MediaSession**：标准媒体控制接口
-- **LiveData/StateFlow**：响应式数据更新
+## 架构说明
 
-### 核心组件
+项目按三层职责组织：
 
-#### 数据层
-- `MusicDatabase` - Room数据库
-- `SongDao` - 歌曲数据访问
-- `PlaylistDao` - 歌单数据访问
-- `RecentPlayDao` - 最近播放数据访问
-- `MusicRepository` - 数据仓库
+- 数据层：`Room + DAO + MusicRepository`
+- 服务层：`MusicPlaybackService + PlayerManager`
+- UI 层：`ContainerActivity + Fragment` 与 `PlaylistDetailActivity`
 
-#### 业务层
-- `MusicPlaybackService` - 前台播放服务
-- `PlayerManager` - 播放器管理器
-- `MusicScanner` - 音乐文件扫描器
-- `LyricsParser` - LRC歌词解析器
-- `PermissionManager` - 权限管理工具
+播放器主链路：
 
-#### UI层
-- `MainActivity` - 主界面（歌曲列表）
-- `PlayerDetailActivity` - 播放详情页
-- `PlaylistActivity` - 歌单管理页面
-- `PlaylistDetailActivity` - 歌单详情页
-- `ScanMusicActivity` - 音乐扫描页面
-- `RecentPlayActivity` - 最近播放页面
+```text
+UI
+ -> PlayerManager
+ -> PlayerServiceConnection
+ -> MusicPlaybackService
+ -> ExoPlayer
+```
 
+核心职责拆分：
 
+- `MusicPlaybackService`：持有播放器实例，负责前台服务、通知、媒体会话、播放控制
+- `PlayerManager`：统一服务连接、状态同步、页面侧播放控制入口
+- `MusicRepository`：统一管理歌曲、歌单、最近播放等本地数据
+- `PlayerLyricsController`：歌词加载、解析、高亮、同步滚动
+- `PlayerViewSwipeController`：三页播放器状态与纵向滚动宿主切换
+- `QueueSectionBinder`：播放队列绑定、当前项定位、队列区刷新
+
+## 全屏播放器交互基线
+
+全屏播放器当前采用三页非循环横滑模型：
+
+- `封面 <-> 歌词 <-> 播放队列`
+- 边界页继续向外滑动只回弹，不跨页
+- `btnShowLyrics` 为顺序切页按钮：`封面 -> 歌词 -> 播放队列 -> 封面`
+
+交互规则：
+
+- `BottomSheetBehavior` 负责迷你播放器和全屏播放器之间的上下展开/折叠
+- `PlayerPageSwipeLayout` 负责全屏内部左右切页
+- 歌词页必须同时支持左右切页、上下滚动歌词、边界时把纵向手势交还给外层
+- 播放队列页必须同时支持左右切页、`RecyclerView` 自身上下滚动、边界时允许外层接管
+
+针对播放队列页滚动问题，当前实现已将“当前纵向滚动宿主”切换收敛到共享控制器中，避免 `BottomSheetBehavior` 把错误页面当成当前 `nested scrolling child`。
+
+## 本地媒体处理
+
+项目对歌词和封面都采用了双通道兜底策略：
+
+- 专辑封面：优先走 `MediaStore albumId`，失败后回退到音频文件元数据提取
+- 歌词：优先查找外部 `.lrc` 文件，失败后回退到音频文件内嵌歌词
+- 歌词定位：解析为带时间戳的有序列表后，使用二分查找定位当前歌词行
+
+这套链路的目标不是追求花哨效果，而是提升本地媒体来源复杂时的兼容性和稳定性。
+
+## 稳定性与质量
+
+项目已沉淀的稳定性实践包括：
+
+- `PlayerManager` 的服务连接绑定 `applicationContext`，避免单例误持有页面对象
+- Fragment 的 `RecyclerView` 在 `onDestroyView()` 断开 `adapter`
+- 延时任务具名化，并在页面销毁时移除回调
+- 页面级播放器控制器提供显式 `release()`，统一释放 observer、adapter、callback 和手势对象
+- debug 构建集成 `LeakCanary`，用于排查播放器和页面生命周期泄漏
+
+当前单元测试覆盖的重点逻辑包括：
+
+- `LyricsParser`
+- `FormatUtils`
+- `PlayMode`
+- `Song`
+- `PageSettleCalculator`
+- `PlayerNestedScrollTargetResolver`
+
+## 工程化验证
+
+仓库已补齐 Gradle Wrapper，并配置 GitHub Actions 持续集成。当前 CI 基础验证链如下：
+
+- `lint`
+- `testDebugUnitTest`
+- `assembleDebug`
+
+CI 会自动上传两类产物：
+
+- `app-debug`：Debug APK
+- `android-verification-reports`：Lint 与单元测试报告
+
+这意味着项目不仅能在本地运行，也具备基础的仓库级验证能力。
 
 ## 项目结构
 
-```
+```text
 app/src/main/java/com/musicplayer/
-├── data/                     # 数据层
-│   ├── dao/                  # 数据访问对象
-│   ├── database/            # 数据库
-│   ├── model/               # 数据模型
-│   └── repository/          # 数据仓库
-├── service/                 # 服务层
+├── data/
+│   ├── dao/
+│   ├── database/
+│   ├── model/
+│   └── repository/
+├── service/
 │   ├── MusicPlaybackService.kt
 │   └── PlayerManager.kt
-├── ui/                      # UI层
-│   ├── main/               # 主界面
-│   ├── player/             # 播放详情
-│   ├── playlist/           # 歌单管理
-│   ├── recent/             # 最近播放
-│   └── scan/               # 音乐扫描
-├── util/                    # 工具类
-│   ├── MusicScanner.kt
-│   ├── LyricsParser.kt
-│   └── PermissionManager.kt
+├── ui/
+│   ├── base/
+│   ├── main/
+│   ├── playlist/
+│   ├── recent/
+│   ├── scan/
+│   ├── adapter/
+│   ├── common/
+│   ├── dialog/
+│   └── widget/
+├── util/
+│   ├── media/
+│   ├── system/
+│   └── ui/
 └── MusicPlayerApplication.kt
 ```
 
+## 构建与运行
 
+常用命令：
 
-## 页面结构
+```bash
+gradlew assembleDebug
+gradlew installDebug
+gradlew assembleRelease
+gradlew testDebugUnitTest
+```
 
-### 1. 歌曲页（首页）
-- 顶部：功能列表图标、标题、搜索图标
-- 功能：排序、随机播放
-- 歌曲列表：专辑封面、歌曲名、歌手名、菜单
-- 底部：迷你播放栏
+Windows：
 
-### 2. 搜索页面
-- 实时搜索歌曲名或歌手名
-- 显示搜索结果列表
+```bash
+gradlew.bat assembleDebug
+```
 
-### 3. 侧边功能列表
-- 歌曲
-- 歌单
-- 扫描音乐
-- 最近播放
+Linux / macOS：
 
-### 4. 歌单页面
-- 歌单列表显示
-- 新建、重命名、删除歌单
+```bash
+./gradlew assembleDebug
+```
 
-### 5. 歌单歌曲页
-- 显示歌单内的歌曲
-- 支持播放全部
+## 权限说明
 
-### 6. 扫描音乐页面
-- 扫描音乐按钮
-- 选择文件夹
-- 显示扫描结果
+项目当前涉及的主要权限：
 
-### 7. 最近播放页面
-- 显示最近播放的20首歌曲
-- 支持清空记录
+- `READ_MEDIA_AUDIO`：Android 13+ 读取音频文件
+- `READ_EXTERNAL_STORAGE`：Android 12 及以下读取音频文件
+- `POST_NOTIFICATIONS`：Android 13+ 播放通知
+- `FOREGROUND_SERVICE`
+- `FOREGROUND_SERVICE_MEDIA_PLAYBACK`
 
-### 8. 播放详情页
-- 歌曲信息展示
+## 代码阅读入口
 
-- 旋转专辑封面
+如果第一次接触这个项目，建议按下面顺序阅读：
 
-- 歌词显示与同步
+1. `app/src/main/java/com/musicplayer/ui/main/ContainerActivity.kt`
+2. `app/src/main/java/com/musicplayer/service/PlayerManager.kt`
+3. `app/src/main/java/com/musicplayer/service/MusicPlaybackService.kt`
+4. `app/src/main/java/com/musicplayer/ui/main/PlayerViewSwipeController.kt`
+5. `app/src/main/java/com/musicplayer/ui/widget/PlayerPageSwipeLayout.kt`
+6. `app/src/main/java/com/musicplayer/ui/main/PlayerLyricsController.kt`
+7. `app/src/main/java/com/musicplayer/ui/main/QueueSectionBinder.kt`
+8. `app/src/main/java/com/musicplayer/data/repository/MusicRepository.kt`
 
-- 播放控制
+仓库内补充文档入口：
 
-- 播放模式切换
+- `.zread/wiki/current`
+- `AGENTS.md`
 
-  
+## 说明
 
-## 使用的第三方库
-
-- **ExoPlayer** - 媒体播放引擎
-- **Room** - SQLite数据库抽象层
-- **Glide** - 图片加载库
-- **Material Components** - Material Design组件
-- **ViewModel & LiveData** - 生命周期感知组件
-
-
-
-## 构建和运行
-
-### 环境要求
-- JDK 17
-- Android Studio (推荐最新版本)
-- Android SDK with API 34
-
-### 构建步骤
-1. 克隆项目到本地
-2. 使用Android Studio打开项目
-3. 等待Gradle同步完成
-4. 连接Android设备或启动模拟器
-5. 点击运行按钮或执行 `./gradlew installDebug`
-
-### 权限说明
-应用需要以下权限：
-- **READ_MEDIA_AUDIO** (Android 13+) - 读取音频文件
-
-- **READ_EXTERNAL_STORAGE** (Android 12及以下) - 读取存储权限
-
-- **POST_NOTIFICATIONS** (Android 13+) - 显示播放通知
-
-- **FOREGROUND_SERVICE** - 前台服务权限
-
-  
-
-## 开发注意事项
-
-### 代码规范
-- 使用Kotlin语言特性
-- 遵循MVVM架构模式
-- 使用LiveData/StateFlow进行数据更新
-- 所有UI操作在主线程执行
-- 数据库操作在IO线程执行
-
-### 性能优化
-- 使用RecyclerView进行列表展示
-- 图片异步加载和缓存
-- 避免内存泄漏（正确管理Service连接）
-- 合理使用Coroutines进行异步操作
-
-### 未来扩展的功能
-- 添加均衡器功能
-- 支持更多音频格式
-- 添加主题切换功能
-- 实现睡眠定时器
-- 添加桌面小部件
-
+README 只保留会长期影响实现决策的稳定事实。一次性调试过程、临时现象和局部实验记录不放在这里，相关内容以项目图谱和专题笔记为准。
