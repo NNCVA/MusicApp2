@@ -1,5 +1,7 @@
 package com.musicplayer.ui.main
 
+import android.view.View
+import androidx.core.view.ViewCompat
 import com.musicplayer.databinding.ContentPlayerDetailBinding
 
 enum class PlayerDetailView(val index: Int) {
@@ -29,10 +31,12 @@ internal class PlayerViewSwipeController(
 
     fun bind() {
         binding.pageSwipeContainer.onPageChanged = { page ->
+            applyNestedScrollTarget(page)
             if (page == PlayerDetailView.QUEUE) {
                 onQueueViewShown()
             }
         }
+        applyNestedScrollTarget(PlayerDetailView.ALBUM_COVER)
         binding.pageSwipeContainer.syncPageTranslations()
     }
 
@@ -54,5 +58,12 @@ internal class PlayerViewSwipeController(
 
     fun release() {
         binding.pageSwipeContainer.release()
+    }
+
+    private fun applyNestedScrollTarget(page: PlayerDetailView) {
+        val target = PlayerNestedScrollTargetResolver.resolve(page)
+        ViewCompat.setNestedScrollingEnabled(binding.lyricsView, target.lyricsEnabled)
+        ViewCompat.setNestedScrollingEnabled(binding.queueRecyclerView, target.queueEnabled)
+        (binding.root.parent as? View)?.requestLayout()
     }
 }
