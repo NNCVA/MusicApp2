@@ -8,6 +8,8 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+    <!-- 音乐扫描页面 -->
+
     <include
         android:id="@+id/content_scan_music"
         layout="@layout/content_scan_music" />

@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
+    <!-- 侧边栏导航菜单 -->
+
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_songs"

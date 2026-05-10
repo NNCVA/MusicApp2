@@ -5,7 +5,14 @@ import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import com.musicplayer.data.model.Playlist
 
-// 歌单选择对话框
+/**
+ * 显示选择歌单的对话框
+ *
+ * @param context 上下文
+ * @param playlists 歌单列表
+ * @param onCreateNewRequested 创建新歌单的回调
+ * @param onConfirmed 选择歌单的回调
+ */
 fun showPlaylistSelectionDialog(
     context: Context,
     playlists: List<Playlist>,

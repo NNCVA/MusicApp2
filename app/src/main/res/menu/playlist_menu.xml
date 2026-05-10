@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- 歌单列表项弹出菜单 -->
+
     <item
         android:id="@+id/menu_rename"
         android:title="@string/rename" />

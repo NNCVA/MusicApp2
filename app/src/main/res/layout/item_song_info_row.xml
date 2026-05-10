@@ -9,6 +9,8 @@
     android:paddingBottom="8dp"
     android:gravity="center_vertical">
 
+    <!-- 歌曲信息行（标签+值） -->
+
     <TextView
         android:id="@+id/tv_label"
         android:layout_width="80dp"

@@ -27,6 +27,9 @@ import kotlinx.coroutines.launch
 
 /**
  * 最近播放页面 Fragment
+ *
+ * 展示用户最近播放的歌曲列表，支持点击播放、长按多选、
+ * 添加到歌单、删除记录等操作。集成迷你播放栏状态同步。
  */
 class RecentPlayFragment : Fragment() {
 
@@ -39,11 +42,13 @@ class RecentPlayFragment : Fragment() {
 
     private var isMultiSelectMode = false
 
+    /** 启用选项菜单，用于显示"清空记录"操作 */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
     }
 
+    /** 创建 Fragment 视图，使用 ViewBinding 绑定布局 */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -53,6 +58,11 @@ class RecentPlayFragment : Fragment() {
         return binding.root
     }
 
+    /**
+     * 视图创建完成后初始化
+     *
+     * 通过 ViewModelProvider 获取 RecentPlayViewModel，然后依次初始化 UI 组件和数据观察。
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -70,9 +80,11 @@ class RecentPlayFragment : Fragment() {
         adapter = SongAdapter(
             onSongClick = { song, position -> playSong(song, position) },
             onSongMenuClick = { song, view -> showSongMenu(song, view) },
+            // 长按歌曲进入多选模式，将长按项作为初始选中项
             onSongLongClick = { song, position -> enterMultiSelectMode(song, position) }
         )
 
+        // 选中项变化时刷新多选工具栏的计数和图标
         adapter.onSelectionChanged = {
             updateMultiSelectToolbar()
         }
@@ -115,6 +127,12 @@ class RecentPlayFragment : Fragment() {
         }
     }
 
+    /**
+     * 观察数据变化
+     *
+     * 订阅最近播放歌曲列表和当前播放歌曲，将变化同步到列表 UI
+     * 并更新当前播放歌曲的高亮状态。
+     */
     private fun observeData() {
         viewModel.recentPlays.observe(viewLifecycleOwner) { songs ->
             adapter.submitList(songs)
@@ -130,12 +148,19 @@ class RecentPlayFragment : Fragment() {
         showPlayerSnackbar(message, duration)
     }
 
+    /** 根据列表是否为空切换空状态视图和列表的可见性，并刷新选项菜单 */
     private fun updateEmptyView(isEmpty: Boolean) {
         binding.contentRecentPlay.emptyView.isVisible = isEmpty
         binding.contentRecentPlay.recyclerView.isVisible = !isEmpty
         requireActivity().invalidateOptionsMenu()
     }
 
+    /**
+     * 播放指定歌曲
+     *
+     * 若点击的歌曲与当前正在播放的相同，则展开全屏播放器；
+     * 否则以最近播放列表为播放队列，从歌曲实际位置开始播放。
+     */
     private fun playSong(song: Song, position: Int) {
         val songs = viewModel.recentPlays.value ?: return
 
@@ -151,6 +176,12 @@ class RecentPlayFragment : Fragment() {
         }
     }
 
+    /**
+     * 显示歌曲操作弹出菜单
+     *
+     * 提供播放、添加到歌单、进入多选模式、从最近播放中删除四项操作。
+     * "添加到歌单"会弹出歌单选择对话框，支持创建新歌单。
+     */
     private fun showSongMenu(song: Song, anchorView: View) {
         val popupMenu = androidx.appcompat.widget.PopupMenu(requireContext(), anchorView)
         popupMenu.menuInflater.inflate(R.menu.song_menu, popupMenu.menu)
@@ -185,6 +216,12 @@ class RecentPlayFragment : Fragment() {
         popupMenu.show()
     }
 
+    /**
+     * 显示单首歌曲添加到歌单的对话框
+     *
+     * 在协程中异步获取所有歌单列表，弹出歌单选择对话框；
+     * 支持用户选择已有歌单或创建新歌单后添加。
+     */
     private fun showAddToPlaylistDialog(song: Song) {
         viewModel.viewModelScope.launch {
             val playlists = viewModel.getAllPlaylistsSync()
@@ -239,6 +276,7 @@ class RecentPlayFragment : Fragment() {
         }
     }
 
+    /** 显示批量删除确认对话框，确认后逐首从最近播放中移除 */
     private fun showDeleteMultipleSongsDialog(songs: List<Song>) {
         showDeleteSongsConfirmDialog(
             context = requireContext(),
@@ -251,6 +289,7 @@ class RecentPlayFragment : Fragment() {
         }
     }
 
+    /** 显示清空最近播放记录确认对话框 */
     private fun showClearConfirmDialog() {
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("清空记录")
@@ -263,6 +302,12 @@ class RecentPlayFragment : Fragment() {
             .show()
     }
 
+    /**
+     * 进入多选模式
+     *
+     * 设置标志位和 Adapter 多选状态，将长按的歌曲加入选中列表，
+     * 刷新整个列表以显示复选框，然后显示多选工具栏。
+     */
     private fun enterMultiSelectMode(selectedSong: Song, position: Int) {
         isMultiSelectMode = true
         adapter.isMultiSelectMode = true
@@ -272,12 +317,14 @@ class RecentPlayFragment : Fragment() {
         showMultiSelectToolbar()
     }
 
+    /** 显示多选工具栏并刷新选项菜单（隐藏"清空记录"按钮） */
     private fun showMultiSelectToolbar() {
         binding.actionBarMultiSelect.root.visibility = View.VISIBLE
         requireActivity().invalidateOptionsMenu()
         updateMultiSelectToolbar()
     }
 
+    /** 退出多选模式：重置 Adapter 选中状态，隐藏多选工具栏，恢复选项菜单 */
     private fun exitMultiSelectMode() {
         isMultiSelectMode = false
         adapter.resetMultiSelectMode()
@@ -285,9 +332,11 @@ class RecentPlayFragment : Fragment() {
         requireActivity().invalidateOptionsMenu()
     }
 
+    /** 刷新多选工具栏：更新选中数量文本和全选按钮图标 */
     private fun updateMultiSelectToolbar() {
         binding.actionBarMultiSelect.tvSelectedCount.text =
             getString(R.string.selected_count, adapter.selectedSongs.size)
+        // 全选图标跟随选中状态切换
         val selectAllIcon = if (adapter.isAllSelected()) {
             R.drawable.ic_select_all_selected
         } else {
@@ -296,11 +345,15 @@ class RecentPlayFragment : Fragment() {
         binding.actionBarMultiSelect.btnSelectAll.setImageResource(selectAllIcon)
     }
 
+    // ==================== 选项菜单 ====================
+
+    /** 创建最近播放页面的选项菜单，包含"清空记录"操作 */
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.fragment_recent, menu)
         super.onCreateOptionsMenu(menu, inflater)
     }
 
+    /** 处理选项菜单点击：清空记录 */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_clear -> {
@@ -312,6 +365,11 @@ class RecentPlayFragment : Fragment() {
         }
     }
 
+    /**
+     * 准备选项菜单可见性
+     *
+     * "清空记录"按钮仅在列表非空且未处于多选模式时显示。
+     */
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
         val songs = viewModel.recentPlays.value ?: emptyList()
@@ -319,6 +377,11 @@ class RecentPlayFragment : Fragment() {
         clearItem?.isVisible = songs.isNotEmpty() && !isMultiSelectMode
     }
 
+    /**
+     * 视图销毁时释放资源
+     *
+     * 解绑 RecyclerView Adapter 并释放 Adapter 内部状态，置空 binding 防止内存泄漏。
+     */
     override fun onDestroyView() {
         binding.contentRecentPlay.recyclerView.adapter = null
         adapter.release()

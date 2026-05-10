@@ -9,6 +9,9 @@
     android:paddingStart="16dp"
     android:paddingEnd="16dp">
 
+    <!-- 歌单列表项 -->
+
+    <!-- 歌单封面图标 -->
     <ImageView
         android:id="@+id/iv_playlist_icon"
         android:layout_width="48dp"
@@ -19,6 +22,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- 歌单名称和歌曲数量 -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -53,6 +57,7 @@
 
     </LinearLayout>
 
+    <!-- 更多操作按钮 -->
     <ImageView
         android:id="@+id/btn_menu"
         android:layout_width="24dp"

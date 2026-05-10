@@ -109,6 +109,11 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         setupMediaSessionCallback()
     }
     
+    /**
+     * 设置 ExoPlayer 事件监听器。
+     * 监听播放状态变化、曲目切换和播放/暂停状态，自动同步更新播放状态、通知栏和媒体元数据。
+     * 曲目切换时异步加载专辑封面并将当前歌曲加入最近播放记录。
+     */
     private fun setupPlayerListener() {
         exoPlayer.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -144,6 +149,10 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         })
     }
     
+    /**
+     * 设置 MediaSession 回调，响应外部媒体控制事件（通知栏按钮、耳机按键、系统媒体控制等）。
+     * 将所有控制操作委托给本服务对应的播放方法。
+     */
     private fun setupMediaSessionCallback() {
         mediaSession.setCallback(object : MediaSessionCompat.Callback() {
             override fun onPlay() {
@@ -188,6 +197,12 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         })
     }
     
+    // ==================== 通知栏 ====================
+
+    /**
+     * 创建通知渠道（Android 8.0+）。
+     * 使用低重要性级别以避免在状态栏弹出横幅，同时关闭角标显示。
+     */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -202,6 +217,11 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         }
     }
     
+    /**
+     * 根据当前播放状态更新通知栏。
+     * 播放时调用 [startForeground] 保持前台服务；暂停时仅更新通知但停止前台状态，
+     * 使系统可以按需回收服务。
+     */
     private fun updateNotification() {
         if (currentSongIndex >= 0 && currentSongIndex < currentPlaylist.size) {
             val song = currentPlaylist[currentSongIndex]
@@ -218,6 +238,13 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         }
     }
     
+    /**
+     * 构建通知栏 [Notification]。
+     * 包含：点击跳转到主页面展开播放器、上一首/播放暂停/下一首三个控制按钮、
+     * MediaStyle 样式以及歌曲标题、艺术家、专辑信息和封面大图标。
+     *
+     * @param song 当前正在播放的歌曲
+     */
     private fun buildNotification(song: Song): Notification {
         // 创建跳转到ContainerActivity的Intent (请求展开Bottom Sheet)
         val intent = Intent(this, ContainerActivity::class.java).apply {
@@ -298,6 +325,13 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         return notificationBuilder.build()
     }
     
+    // ==================== 播放状态与媒体元数据 ====================
+
+    /**
+     * 同步当前播放状态到 MediaSession。
+     * 将 ExoPlayer 的播放/暂停状态、当前位置和可用操作（播放、暂停、上下首、拖动、停止）
+     * 写入 [PlaybackStateCompat]，供通知栏和系统媒体控制使用。
+     */
     private fun updatePlaybackState() {
         val state = if (exoPlayer.isPlaying) {
             PlaybackStateCompat.STATE_PLAYING
@@ -320,6 +354,14 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         mediaSession.setPlaybackState(playbackState)
     }
     
+    /**
+     * 为指定歌曲创建 MediaDescription。
+     * 包含媒体 ID、标题、艺术家、专辑名、专辑封面 URI 和音频文件路径，
+     * 用于构建 MediaMetadata 和 MediaBrowser 媒体项。
+     *
+     * @param song 歌曲对象
+     * @return 包含完整媒体描述信息的 [MediaDescriptionCompat]
+     */
     private fun createMediaDescription(song: Song): MediaDescriptionCompat {
         // 获取专辑封面URI
         val albumArtUri = ContentUris.withAppendedId(
@@ -339,6 +381,15 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
     
     // ==================== 播放控制方法 ====================
     
+    /**
+     * 播放指定歌曲列表，从 [startIndex] 位置开始。
+     * 将整个播放列表加载到 ExoPlayer，设置循环模式匹配当前播放模式，
+     * 异步加载封面并更新通知栏和播放状态。
+     *
+     * @param song 用于获取媒体元数据的目标歌曲
+     * @param playlist 完整播放列表
+     * @param startIndex 起始播放位置索引，默认为 0
+     */
     fun playSong(song: Song, playlist: List<Song>, startIndex: Int = 0) {
         currentPlaylist = playlist
         currentSongIndex = startIndex
@@ -367,6 +418,14 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         updateNotification()
     }
     
+    /**
+     * 设置当前歌曲的媒体元数据到 MediaSession。
+     * 写入标题、艺术家、专辑、时长、文件路径、封面 URI 和封面 Bitmap，
+     * 供系统媒体控制和通知栏显示使用。
+     *
+     * @param song 歌曲对象
+     * @param albumArt 专辑封面 Bitmap，可为 null
+     */
     private fun setMediaMetadata(song: Song, albumArt: Bitmap?) {
         val mediaDescription = createMediaDescription(song)
         
@@ -385,6 +444,12 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         mediaSession.setMetadata(metadata)
     }
     
+    // ==================== 专辑封面加载 ====================
+
+    /**
+     * 异步加载专辑封面并更新媒体元数据和通知栏。
+     * 在 IO 线程执行封面加载，完成后切回主线程设置元数据和刷新通知。
+     */
     private fun loadAlbumArtAsync(song: Song) {
         // 在后台线程加载专辑封面
         serviceScope.launch(Dispatchers.IO) { 
@@ -397,79 +462,101 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         }
     }
     
+    /**
+     * 加载专辑封面 Bitmap，采用三级回退策略：
+     * 1. 通过 MediaStore albumId 查询系统专辑封面
+     * 2. 从音频文件中提取内嵌封面（Jaudiotagger）
+     * 3. 使用默认占位图标
+     *
+     * @param song 歌曲对象
+     * @return 专辑封面 Bitmap，任何异常情况下返回占位图
+     */
     private fun loadAlbumArt(song: Song): Bitmap? {
         try {
-            // 首先尝试通过albumId获取专辑封面
+            // 第一级回退：通过 MediaStore albumId 查询系统专辑封面数据库
             if (song.albumId > 0) {
                 val albumArtByAlbumId = AlbumArtExtractor.getAlbumArtBitmap(contentResolver, song.albumId)
                 if (albumArtByAlbumId != null) {
                     return albumArtByAlbumId
                 }
             }
-            
-            // 如果失败，尝试从音频文件中提取内嵌封面
+
+            // 第二级回退：使用 Jaudiotagger 从音频文件中提取内嵌封面
             val embeddedAlbumArt = AlbumArtExtractor.getEmbeddedAlbumArt(song.path)
             if (embeddedAlbumArt != null) {
                 return embeddedAlbumArt
             }
-            
-            // 如果都失败，使用占位符图片
+
+            // 第三级回退：所有方式均失败，使用默认播放图标作为占位图
             return BitmapFactory.decodeResource(resources, R.drawable.ic_play)
         } catch (e: Exception) {
-            // 处理异常，返回占位符图片
             e.printStackTrace()
+            // 异常兜底：返回占位图确保不返回 null
             return BitmapFactory.decodeResource(resources, R.drawable.ic_play)
         }
     }
     
+    /** 恢复播放，委托给 ExoPlayer */
     fun play() {
         exoPlayer.play()
     }
     
+    /** 暂停播放，委托给 ExoPlayer */
     fun pause() {
         exoPlayer.pause()
     }
     
+    /** 停止播放、释放前台服务状态并销毁服务 */
     fun stop() {
         exoPlayer.stop()
         stopForeground(true)
         stopSelf()
     }
     
+    /**
+     * 跳转到下一首歌曲，行为因播放模式而异：
+     * - [PlayMode.ORDER]：顺序播放，到最后一首后回到第一首
+     * - [PlayMode.SHUFFLE]：随机选择一首播放
+     * - [PlayMode.REPEAT_ONE]：单曲循环下仍允许手动跳转下一首（同顺序逻辑）
+     * 切歌后自动恢复播放。
+     */
     fun skipToNext() {
         when (currentPlayMode) {
+            // 顺序模式：前进到下一首，末尾循环回到开头
             PlayMode.ORDER -> {
                 if (currentSongIndex < currentPlaylist.size - 1) {
                     exoPlayer.seekToNextMediaItem()
                 } else if (currentSongIndex == currentPlaylist.size - 1 && currentPlaylist.isNotEmpty()) {
-                    // 如果是最后一首歌，切换到第一首
+                    // 最后一首歌，回到列表开头
                     exoPlayer.seekTo(0, 0)
                 }
-                // 切换歌曲后自动播放
                 exoPlayer.play()
             }
+            // 随机模式：从播放列表中随机选择一首
             PlayMode.SHUFFLE -> {
                 if (currentPlaylist.isNotEmpty()) {
                     val randomIndex = Random().nextInt(currentPlaylist.size)
                     exoPlayer.seekTo(randomIndex, 0)
-                    // 切换歌曲后自动播放
                     exoPlayer.play()
                 }
             }
+            // 单曲循环模式：手动切歌时仍按顺序逻辑跳转（ExoPlayer 的 repeatMode 在正常播放时会循环当前曲目）
             PlayMode.REPEAT_ONE -> {
-                // 单曲循环模式下，允许跳转到下一首歌曲
                 if (currentSongIndex < currentPlaylist.size - 1) {
                     exoPlayer.seekToNextMediaItem()
                 } else if (currentSongIndex == currentPlaylist.size - 1 && currentPlaylist.isNotEmpty()) {
-                    // 如果是最后一首歌，切换到第一首
                     exoPlayer.seekTo(0, 0)
                 }
-                // 切换歌曲后自动播放
                 exoPlayer.play()
             }
         }
     }
     
+    /**
+     * 跳转到上一首歌曲。
+     * 不是第一首时切换到上一首；是第一首时跳转到列表末尾（循环）。
+     * 切歌后自动恢复播放。
+     */
     fun skipToPrevious() {
         if (currentSongIndex > 0) {
             // 如果不是第一首歌，切换到上一首
@@ -482,10 +569,16 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         exoPlayer.play()
     }
     
+    /** 拖动进度到指定位置（毫秒），委托给 ExoPlayer */
     fun seekTo(position: Long) {
         exoPlayer.seekTo(position)
     }
     
+    /**
+     * 设置播放模式并同步 ExoPlayer 循环模式。
+     * - [PlayMode.ORDER] / [PlayMode.SHUFFLE]：ExoPlayer 关闭循环（由服务自行管理边界）
+     * - [PlayMode.REPEAT_ONE]：ExoPlayer 设为单曲循环
+     */
     fun setPlayMode(mode: PlayMode) {
         currentPlayMode = mode
         
@@ -497,8 +590,10 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         }
     }
     
+    /** 返回当前播放模式 */
     fun getCurrentPlayMode(): PlayMode = currentPlayMode
-    
+
+    /** 返回当前正在播放的歌曲，索引无效时返回 null */
     fun getCurrentSong(): Song? {
         return if (currentSongIndex >= 0 && currentSongIndex < currentPlaylist.size) {
             currentPlaylist[currentSongIndex]
@@ -507,10 +602,13 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         }
     }
     
+    /** 返回当前播放位置（毫秒） */
     fun getCurrentPosition(): Long = exoPlayer.currentPosition
-    
+
+    /** 返回当前曲目总时长（毫秒） */
     fun getDuration(): Long = exoPlayer.duration
-    
+
+    /** 返回 ExoPlayer 是否正在播放 */
     fun isPlaying(): Boolean = exoPlayer.isPlaying
 
     /**
@@ -547,6 +645,10 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
 
     // ==================== MediaBrowserServiceCompat 方法 ====================
     
+    /**
+     * 返回媒体浏览根节点。
+     * 当前实现返回固定的 "root" 根节点，不限制客户端访问。
+     */
     override fun onGetRoot(
         clientPackageName: String,
         clientUid: Int,
@@ -555,6 +657,10 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         return BrowserRoot("root", null)
     }
     
+    /**
+     * 加载指定父节点下的媒体子项列表。
+     * 当前实现不暴露媒体库内容，直接返回空列表（播放列表由客户端自行管理）。
+     */
     override fun onLoadChildren(
         parentId: String,
         result: Result<List<MediaBrowserCompat.MediaItem>>
@@ -562,12 +668,20 @@ class MusicPlaybackService : MediaBrowserServiceCompat() {
         result.sendResult(emptyList())
     }
     
+    /**
+     * 处理启动命令，将媒体按钮事件委托给 MediaSession。
+     * 耳机按键、通知栏按钮等通过 Intent 传递的控制事件在此分发。
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // 处理媒体按钮事件
         MediaButtonReceiver.handleIntent(mediaSession, intent)
         return super.onStartCommand(intent, flags, startId)
     }
     
+    /**
+     * 服务销毁时释放所有资源。
+     * 依次取消音量动画、停用并释放 MediaSession、释放 ExoPlayer、取消协程作用域。
+     */
     override fun onDestroy() {
         super.onDestroy()
         volumeAnimator?.cancel()

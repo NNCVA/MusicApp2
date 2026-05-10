@@ -8,6 +8,9 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/activity_playlist">
 
+    <!-- 歌单列表主内容区 -->
+
+    <!-- 歌单列表 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="0dp"
@@ -21,6 +24,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@layout/item_playlist" />
 
+    <!-- 空状态提示 -->
     <LinearLayout
         android:id="@+id/empty_view"
         android:layout_width="wrap_content"

@@ -2,6 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- 主页顶部操作栏菜单 -->
+
     <item
         android:id="@+id/action_search"
         android:icon="@drawable/ic_search"

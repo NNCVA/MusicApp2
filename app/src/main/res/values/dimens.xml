@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- 全局尺寸定义 -->
+
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="app_bar_height">180dp</dimen>
     <dimen name="text_margin">16dp</dimen>
@@ -8,5 +11,8 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="status_bar_height">24dp</dimen>
+
+    <!-- 底部迷你播放栏高度 -->
+
     <dimen name="mini_player_height">72dp</dimen>
 </resources>

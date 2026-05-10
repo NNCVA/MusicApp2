@@ -5,6 +5,8 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/nav_songs">
 
+    <!-- 导航图：定义四个主页面的目的地 -->
+
     <fragment
         android:id="@+id/nav_songs"
         android:name="com.musicplayer.ui.main.SongsFragment"

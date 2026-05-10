@@ -31,7 +31,8 @@ class MainViewModel(private val musicRepository: MusicRepository) : ViewModel() 
     init {
         loadSongs()
     }
-    
+
+    // 加载歌曲
     private fun loadSongs() {
         _isLoading.value = true
         viewModelScope.launch {
@@ -46,11 +47,17 @@ class MainViewModel(private val musicRepository: MusicRepository) : ViewModel() 
             }
         }
     }
-    
+
+    /**
+     * 刷新歌曲列表
+     */
     fun refreshSongs() {
         loadSongs()
     }
-    
+
+    /**
+     * 删除歌曲
+     */
     fun deleteSong(song: Song) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -60,7 +67,10 @@ class MainViewModel(private val musicRepository: MusicRepository) : ViewModel() 
             }
         }
     }
-    
+
+    /**
+     * 搜索歌曲
+     */
     fun searchSongs(query: String) {
         viewModelScope.launch {
             if (query.isBlank()) {
@@ -74,12 +84,18 @@ class MainViewModel(private val musicRepository: MusicRepository) : ViewModel() 
             }
         }
     }
-    
+
+    /**
+     * 设置排序类型
+     */
     fun setSortType(sortType: SortType) {
         _sortType.value = sortType
         applySort()
     }
-    
+
+    /**
+     * 切换排序类型
+     */
     fun toggleSortType(): SortType {
         val currentType = _sortType.value ?: SortType.DEFAULT
         val nextType = when (currentType) {

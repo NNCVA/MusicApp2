@@ -76,6 +76,13 @@ class ScanMusicFragment : Fragment() {
         }
     }
 
+    /**
+     * Fragment创建时的初始化方法
+     *
+     * 从应用程序上下文中获取音乐仓库实例，用于后续的音乐数据操作
+     *
+     * @param savedInstanceState 之前保存的实例状态Bundle，如果是首次创建则为null
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         musicRepository = (requireActivity().application as MusicPlayerApplication).musicRepository
@@ -125,6 +132,7 @@ class ScanMusicFragment : Fragment() {
         updateSelectedFolders()
     }
 
+    // 检查权限
     private fun checkPermissions() {
         if (!PermissionManager.hasAudioPermission(requireContext())) {
             binding.contentScanMusic.permissionView.visibility = View.VISIBLE
@@ -139,6 +147,7 @@ class ScanMusicFragment : Fragment() {
         }
     }
 
+    // 请求权限
     private fun requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO)
@@ -147,11 +156,13 @@ class ScanMusicFragment : Fragment() {
         }
     }
 
+    // 选择文件夹
     private fun selectFolder() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         selectFolderLauncher.launch(intent)
     }
 
+    // 获取路径
     private fun hasSelectedFolders(): Boolean {
         val sharedPref = requireContext().getSharedPreferences("ScanMusicPrefs", Context.MODE_PRIVATE)
         val selectedFoldersJson = sharedPref.getString("selected_folders", null)
@@ -160,6 +171,7 @@ class ScanMusicFragment : Fragment() {
             .isNotEmpty()
     }
 
+    // 开始扫描
     private fun startScan() {
         if (hasSelectedFolders()) {
             Toast.makeText(requireContext(), R.string.scanning_selected_folders, Toast.LENGTH_SHORT).show()
@@ -179,11 +191,13 @@ class ScanMusicFragment : Fragment() {
             try {
                 val songs = MusicScanner.scanAllMusic(requireContext())
 
+                // 如果扫描结果不为空，则插入数据库
                 if (songs.isNotEmpty()) {
                     musicRepository.deleteAllSongs()
                     musicRepository.insertSongs(songs)
                 }
 
+                //  扫描完成
                 withContext(Dispatchers.Main) {
                     onScanComplete(songs.size)
                 }
@@ -195,6 +209,9 @@ class ScanMusicFragment : Fragment() {
         }
     }
 
+    /**
+     * 扫描选中的文件夹
+     */
     private fun scanSelectedFolders() {
         binding.contentScanMusic.progressBar.visibility = View.VISIBLE
         binding.contentScanMusic.btnScan.isEnabled = false
@@ -244,6 +261,9 @@ class ScanMusicFragment : Fragment() {
         }
     }
 
+    /**
+     * 扫描完成，显示结果，弹出对话框
+     */
     private fun onScanComplete(songCount: Int) {
         binding.contentScanMusic.progressBar.visibility = View.GONE
         binding.contentScanMusic.btnScan.isEnabled = true
@@ -256,6 +276,9 @@ class ScanMusicFragment : Fragment() {
         }
     }
 
+    /**
+     * 扫描错误，显示错误信息，弹出对话框
+     */
     private fun onScanError(errorMessage: String) {
         binding.contentScanMusic.progressBar.visibility = View.GONE
         binding.contentScanMusic.btnScan.isEnabled = true

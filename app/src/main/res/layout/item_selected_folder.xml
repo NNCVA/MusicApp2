@@ -6,6 +6,8 @@
     android:padding="8dp"
     android:gravity="center_vertical">
 
+    <!-- 已选文件夹列表项 -->
+
     <ImageView
         android:id="@+id/iv_folder_icon"
         android:layout_width="24dp"
