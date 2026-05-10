@@ -14,6 +14,13 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.musicplayer.R
 
+/**
+ * 适配器，用于显示已选择的文件夹列表。
+ *
+ * @param context 上下文对象
+ * @param folderList 已选择的文件夹列表
+ * @param onDeleteClick 文件夹删除按钮点击事件监听器
+ */
 class SelectedFolderAdapter(
     private val context: Context,
     private var folderList: List<String>,

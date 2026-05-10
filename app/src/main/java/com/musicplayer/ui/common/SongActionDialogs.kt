@@ -5,12 +5,14 @@ import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import com.musicplayer.data.model.Playlist
 
+// 歌单选择对话框
 fun showPlaylistSelectionDialog(
     context: Context,
     playlists: List<Playlist>,
     onCreateNewRequested: () -> Unit,
     onConfirmed: (List<Long>) -> Unit
 ) {
+    // 如果歌单为空，则提示创建歌单
     if (playlists.isEmpty()) {
         AlertDialog.Builder(context)
             .setTitle("提示")
@@ -27,6 +29,7 @@ fun showPlaylistSelectionDialog(
     val playlistNames = playlists.map { it.name }.toTypedArray()
     val selectedIndices = BooleanArray(playlists.size)
 
+    // 显示对话框
     AlertDialog.Builder(context)
         .setTitle("添加到歌单")
         .setMultiChoiceItems(playlistNames, selectedIndices) { _, which, isChecked ->
@@ -47,6 +50,7 @@ fun showPlaylistSelectionDialog(
         .show()
 }
 
+// 新建歌单对话框
 fun showCreatePlaylistNameDialog(
     context: Context,
     onConfirmed: (String) -> Unit
@@ -70,6 +74,7 @@ fun showCreatePlaylistNameDialog(
         .show()
 }
 
+// 删除歌曲对话框
 fun showDeleteSongsConfirmDialog(
     context: Context,
     songCount: Int,
