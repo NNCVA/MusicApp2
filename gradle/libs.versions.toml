@@ -1,6 +1,6 @@
 [versions]
-agp = "8.2.0"
-kotlin = "1.9.21"
+agp = "9.3.0"
+kotlin = "2.2.20"
 coreKtx = "1.12.0"
 appcompat = "1.6.1"
 material = "1.11.0"
@@ -13,7 +13,7 @@ navigationUiKtx = "2.7.6"
 legacySupportV4 = "1.0.0"
 viewpager2 = "1.1.0"
 exoplayer = "1.4.0"
-roomRuntime = "2.6.1"
+roomRuntime = "2.8.1"
 glide = "4.16.0"
 media = "1.4.0"
 jaudiotagger = "2.2.5"
@@ -45,6 +45,7 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "glide" }
 glide-annotations = { group = "com.github.bumptech.glide", name = "annotations", version.ref = "glide" } # 添加这一行
+kotlin-parcelize-runtime = { group = "org.jetbrains.kotlin", name = "kotlin-parcelize-runtime", version.ref = "kotlin" }
 media = { group = "androidx.media3", name = "media3-session", version.ref = "media" }
 jaudiotagger = { group = "net.jthink", name = "jaudiotagger", version.ref = "jaudiotagger" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -55,8 +56,8 @@ androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+legacy-kapt = { id = "com.android.legacy-kapt", version.ref = "agp" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 
 [bundles]
 room = ["room-runtime", "room-ktx"]

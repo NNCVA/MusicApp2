@@ -2,8 +2,8 @@
 
 plugins {
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.kotlin.kapt) apply false
+    alias(libs.plugins.legacy.kapt) apply false
+    alias(libs.plugins.kotlin.parcelize) apply false
 }
 
 allprojects {
@@ -14,5 +14,5 @@ allprojects {
 }
 
 tasks.register<Delete>("clean") {
-    delete(rootProject.buildDir)
+    delete(layout.buildDirectory)
 }

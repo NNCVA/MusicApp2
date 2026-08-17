@@ -1,8 +1,7 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.kapt")
-    id("org.jetbrains.kotlin.plugin.parcelize")
+    alias(libs.plugins.legacy.kapt)
+    alias(libs.plugins.kotlin.parcelize)
 }
 
 android {
@@ -31,9 +30,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
     }
     buildFeatures {
         viewBinding = true
@@ -79,6 +75,7 @@ dependencies {
     implementation(libs.glide)
     kapt(libs.glide.compiler)
     implementation(libs.glide.annotations) // 添加这一行
+    implementation(libs.kotlin.parcelize.runtime)
 
     // MediaSession
     implementation(libs.media)
